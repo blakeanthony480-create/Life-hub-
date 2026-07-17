@@ -1,2 +1,194 @@
-<h1>Life Hub</h1>
-<p>My website is live.</p>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Hub</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      background: #0b1020;
+      color: #eef2ff;
+      font-family: Arial, sans-serif;
+    }
+
+    main {
+      width: min(100%, 700px);
+      margin: auto;
+    }
+
+    h1 { margin-bottom: 6px; }
+
+    p { color: #aab7d4; }
+
+    .card {
+      margin-top: 20px;
+      padding: 18px;
+      background: #151d33;
+      border: 1px solid #2c3b60;
+      border-radius: 14px;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      color: white;
+      background: #0b1020;
+      border: 1px solid #44547c;
+      border-radius: 9px;
+    }
+
+    button {
+      padding: 12px 15px;
+      color: white;
+      background: #7657ff;
+      border: 0;
+      border-radius: 9px;
+      font-weight: bold;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #2c3b60;
+    }
+
+    li.done span {
+      color: #8e9bb6;
+      text-decoration: line-through;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .delete {
+      background: #b83f58;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 12px;
+      color: white;
+      background: #0b1020;
+      border: 1px solid #44547c;
+      border-radius: 9px;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Life Hub</h1>
+    <p>Your tasks and notes, all in one place.</p>
+
+    <section class="card">
+      <h2>My Tasks</h2>
+      <form id="taskForm">
+        <input id="taskInput" placeholder="Add a task..." required>
+        <button type="submit">Add</button>
+      </form>
+      <ul id="taskList"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Notes</h2>
+      <textarea id="notes" placeholder="Write notes here..."></textarea>
+    </section>
+  </main>
+
+  <script>
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const taskList = document.getElementById("taskList");
+    const notes = document.getElementById("notes");
+
+    let tasks = JSON.parse(localStorage.getItem("lifeHubTasks") || "[]");
+    notes.value = localStorage.getItem("lifeHubNotes") || "";
+
+    function saveTasks() {
+      localStorage.setItem("lifeHubTasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+
+      tasks.forEach((task) => {
+        const item = document.createElement("li");
+        if (task.done) item.classList.add("done");
+
+        const text = document.createElement("span");
+        text.textContent = task.text;
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        const doneButton = document.createElement("button");
+        doneButton.textContent = task.done ? "Undo" : "Done";
+        doneButton.onclick = () => {
+          task.done = !task.done;
+          saveTasks();
+          renderTasks();
+        };
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.className = "delete";
+        deleteButton.onclick = () => {
+          tasks = tasks.filter((savedTask) => savedTask.id !== task.id);
+          saveTasks();
+          renderTasks();
+        };
+
+        actions.append(doneButton, deleteButton);
+        item.append(text, actions);
+        taskList.appendChild(item);
+      });
+    }
+
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const text = taskInput.value.trim();
+      if (!text) return;
+
+      tasks.push({
+        id: Date.now(),
+        text: text,
+        done: false
+      });
+
+      saveTasks();
+      renderTasks();
+      taskInput.value = "";
+    });
+
+    notes.addEventListener("input", () => {
+      localStorage.setItem("lifeHubNotes", notes.value);
+    });
+
+    renderTasks();
+  </script>
+</body>
+</html>
+
